@@ -1,0 +1,23 @@
+# Host-CLI convenience: build the image AND run it in one command.
+#     docker compose -f docker-compose.build.yml up -d --build
+# (Reads a local .env automatically for the variables.)
+services:
+  fire-monitor:
+    build: .
+    image: zimfire-monitor:latest
+    container_name: zimfire-monitor
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    volumes:
+      - fire_output:/app/output
+      - fire_db:/app/src/db
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+volumes:
+  fire_output:
+  fire_db:

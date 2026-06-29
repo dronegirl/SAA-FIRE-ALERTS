@@ -41,31 +41,44 @@ optional (see note at the bottom).
 
 ## 2a. Deploy via Portainer (recommended)
 
-Portainer needs the build context, so use a method that uploads the whole folder:
+Build the image **once on the Docker host**, then deploy a stack that just
+references it. This way Portainer never needs a build context (the cause of the
+`"/src/aoi.geojson": not found` error — Portainer's stack build context didn't
+include the `src/` folder).
 
-1. Put this folder on your Docker host (e.g. `git push` to a repo, or copy it over).
-2. Portainer → **Stacks** → **Add stack**.
-3. Choose **Repository** (point at your git repo) **or** **Upload** (upload this
-   folder). The plain *Web editor* cannot build from local files.
-4. Set the stack name (e.g. `zimfire`).
-5. Under **Environment variables**, click **Add an environment variable** and enter
-   at least the three required keys:
+**Step 1 — build the image on the host** (from inside this folder, so the full
+directory is the build context):
+
+```bash
+cd ZimFire-Deploy
+docker build -t zimfire-monitor:latest .
+```
+
+**Step 2 — deploy the stack in Portainer:**
+
+1. Portainer → **Stacks** → **Add stack**.
+2. Name it (e.g. `zimfire`). The **Web editor** is fine now — paste the contents
+   of `docker-compose.yml` (it has no `build:` step, so no files are needed).
+3. Under **Environment variables**, add at least the three required keys:
    `EUMETSAT_CONSUMER_KEY`, `EUMETSAT_CONSUMER_SECRET`, `FIRMS_MAP_KEY`
-   (add `POLL_INTERVAL_SECONDS`, `RUN_ONCE`, etc. only if you want to override the
-   defaults). Do **not** rely on uploading a `.env` file — Portainer doesn't place
-   it where compose looks, which is the cause of the
-   `env file .../.env not found` error.
-6. **Deploy the stack.**
+   (add `POLL_INTERVAL_SECONDS`, `RUN_ONCE`, etc. only to override defaults).
+4. **Deploy the stack.**
 
-Portainer builds `zimfire-monitor:latest` and starts the `fire-monitor` service.
-Watch progress under the container's **Logs**; you'll see `Starting fire
-monitoring cycle ...` and `Exported .../ranked_fire_alerts.csv`.
+Watch the container's **Logs**; you'll see `Starting fire monitoring cycle ...`
+and `Exported .../ranked_fire_alerts.csv`.
+
+When you change code or the AOI, rebuild (`docker build -t zimfire-monitor:latest .`)
+and redeploy/recreate the stack to pick up the new image.
 
 ## 2b. Deploy from the Docker host CLI (simplest to test)
 
+Use the build-enabled compose file, which builds and runs in one command and
+reads your local `.env`:
+
 ```bash
-docker compose up -d --build
-docker compose logs -f
+cp .env.example .env   # fill in credentials first
+docker compose -f docker-compose.build.yml up -d --build
+docker compose -f docker-compose.build.yml logs -f
 ```
 
 ## 3. Test a single cycle
@@ -74,7 +87,7 @@ Set `RUN_ONCE=true` in `.env` (or as an env override) to run one cycle and exit 
 handy for confirming credentials and AOI before leaving it on the 15-minute loop.
 
 ```bash
-RUN_ONCE=true docker compose run --rm fire-monitor
+RUN_ONCE=true docker compose -f docker-compose.build.yml run --rm fire-monitor
 ```
 
 ## 4. Where the data lives

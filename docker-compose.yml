@@ -1,17 +1,21 @@
 # =========================================================
-# ZimFire Monitor — Portainer stack
+# ZimFire Monitor — Portainer stack (no build step)
 #
-# No env_file: variables are interpolated below.
-#   * Portainer: fill them in the stack's "Environment variables" panel.
-#   * CLI:       docker compose auto-loads a local .env for interpolation.
+# This stack references a PREBUILT image. Build it once on the
+# Docker host so Portainer never needs a build context:
 #
-# Deploy (CLI):       docker compose up -d --build
-# Deploy (Portainer): Stacks -> Add stack -> Repository/Upload,
-#                     then add the variables below before deploying.
+#     cd ZimFire-Deploy
+#     docker build -t zimfire-monitor:latest .
+#
+# Then deploy this stack in Portainer (Web editor is fine now —
+# there are no files to ship, just this compose). Set the env
+# vars in the stack's "Environment variables" panel.
+#
+# Host CLI alternative (build + run in one go):
+#     docker compose -f docker-compose.build.yml up -d --build
 # =========================================================
 services:
   fire-monitor:
-    build: .
     image: zimfire-monitor:latest
     container_name: zimfire-monitor
     restart: unless-stopped
