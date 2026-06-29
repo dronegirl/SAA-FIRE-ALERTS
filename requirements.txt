@@ -1,0 +1,35 @@
+# =========================================================
+# ZimFire Monitor — worker dependencies (pinned)
+# These are ONLY the packages main.py actually imports.
+# The Streamlit/folium/matplotlib/openpyxl packages from the
+# original requirements.txt were removed because nothing in
+# main.py uses them. If you add a dashboard service later,
+# put its deps in a separate requirements file for that image.
+# All of these resolve to prebuilt binary wheels, so the image
+# builds without GDAL/GEOS/PROJ system packages.
+# =========================================================
+
+# Core data handling
+pandas==3.0.4
+numpy==2.5.0
+
+# Geospatial processing (wheels bundle GEOS/PROJ/GDAL/libspatialindex)
+geopandas==1.1.4
+shapely==2.1.2
+pyproj==3.7.2
+pyogrio==0.13.0
+rtree==1.4.1
+
+# Satellite / NetCDF processing
+xarray==2026.4.0
+netCDF4==1.7.4
+h5netcdf==1.8.1
+
+# EUMETSAT / Meteosat API
+eumdac==3.1.1
+
+# NASA FIRMS + HTTP
+requests==2.34.2
+
+# Environment variables
+python-dotenv==1.2.2

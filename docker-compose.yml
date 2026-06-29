@@ -1,0 +1,37 @@
+# =========================================================
+# ZimFire Monitor — Portainer stack
+#
+# Deploy via Portainer: Stacks -> Add stack -> (Web editor, or
+# Repository/Upload if you want the build context). Or from the
+# Docker host CLI:  docker compose up -d --build
+# =========================================================
+services:
+  fire-monitor:
+    build: .
+    image: zimfire-monitor:latest
+    container_name: zimfire-monitor
+    restart: unless-stopped
+
+    # Proper PID 1 / signal handling so SIGTERM stops the loop cleanly.
+    init: true
+
+    # All secrets and tunables come from .env (next to this file).
+    env_file:
+      - .env
+
+    # Persist generated outputs and the sqlite dedup db across
+    # restarts and image rebuilds.
+    volumes:
+      - fire_output:/app/output
+      - fire_db:/app/src/db
+
+    # Keep 24/7 logs from filling the disk.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  fire_output:
+  fire_db:

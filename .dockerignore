@@ -1,0 +1,24 @@
+# secrets & local env
+.env
+_env
+*.env
+!.env.example
+
+# python noise
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# runtime data (provided by volumes, not the image)
+output/
+src/db/
+
+# vcs / editors / os
+.git/
+.gitignore
+.DS_Store
+*.swp
+
+# docs not needed in image
+README.md
