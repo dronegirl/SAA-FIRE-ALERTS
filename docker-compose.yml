@@ -1,9 +1,13 @@
 # =========================================================
 # ZimFire Monitor — Portainer stack
 #
-# Deploy via Portainer: Stacks -> Add stack -> (Web editor, or
-# Repository/Upload if you want the build context). Or from the
-# Docker host CLI:  docker compose up -d --build
+# No env_file: variables are interpolated below.
+#   * Portainer: fill them in the stack's "Environment variables" panel.
+#   * CLI:       docker compose auto-loads a local .env for interpolation.
+#
+# Deploy (CLI):       docker compose up -d --build
+# Deploy (Portainer): Stacks -> Add stack -> Repository/Upload,
+#                     then add the variables below before deploying.
 # =========================================================
 services:
   fire-monitor:
@@ -11,21 +15,29 @@ services:
     image: zimfire-monitor:latest
     container_name: zimfire-monitor
     restart: unless-stopped
-
-    # Proper PID 1 / signal handling so SIGTERM stops the loop cleanly.
     init: true
 
-    # All secrets and tunables come from .env (next to this file).
-    env_file:
-      - .env
+    environment:
+      # ---- required ----
+      EUMETSAT_CONSUMER_KEY: ${EUMETSAT_CONSUMER_KEY}
+      EUMETSAT_CONSUMER_SECRET: ${EUMETSAT_CONSUMER_SECRET}
+      FIRMS_MAP_KEY: ${FIRMS_MAP_KEY}
+      # ---- optional / tunable (defaults applied if unset) ----
+      EUM_COLLECTION: ${EUM_COLLECTION:-EO:EUM:DAT:0682}
+      MIN_CONFIDENCE: ${MIN_CONFIDENCE:-0.5}
+      LOOKBACK_HOURS: ${LOOKBACK_HOURS:-2}
+      POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-900}
+      RUN_ONCE: ${RUN_ONCE:-false}
+      # ---- Telerivet (unused by this build; safe to leave blank) ----
+      TELERIVET_API_KEY: ${TELERIVET_API_KEY:-}
+      TELERIVET_PROJECT_ID: ${TELERIVET_PROJECT_ID:-}
+      TELERIVET_GROUP_ID: ${TELERIVET_GROUP_ID:-}
+      ALERT_TO: ${ALERT_TO:-}
 
-    # Persist generated outputs and the sqlite dedup db across
-    # restarts and image rebuilds.
     volumes:
       - fire_output:/app/output
       - fire_db:/app/src/db
 
-    # Keep 24/7 logs from filling the disk.
     logging:
       driver: json-file
       options:
