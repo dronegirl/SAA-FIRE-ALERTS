@@ -16,7 +16,15 @@ a ranked CSV to a persistent `output` volume every `POLL_INTERVAL_SECONDS`.
 └── src/aoi.geojson         # your monitored compartments (baked into image)
 ```
 
-## 1. One-time setup
+## 1. Configuration
+
+The compose file does **not** use `env_file` (that path doesn't exist when
+Portainer deploys a stack). Instead every variable is interpolated, fed from:
+
+- **Portainer** → the stack's *Environment variables* panel, or
+- **CLI** → a local `.env` file, which `docker compose` loads automatically.
+
+For the CLI workflow:
 
 ```bash
 cp .env.example .env
@@ -24,7 +32,8 @@ cp .env.example .env
 ```
 
 Only `EUMETSAT_CONSUMER_KEY`, `EUMETSAT_CONSUMER_SECRET`, and `FIRMS_MAP_KEY`
-are required to start. Telerivet keys are optional (see note at the bottom).
+are required to start. The rest have working defaults; Telerivet keys are
+optional (see note at the bottom).
 
 > **Security:** the `_env` file you originally had contains live keys. Treat them
 > as leaked and rotate the EUMETSAT secret, FIRMS map key, and Telerivet key
@@ -37,10 +46,15 @@ Portainer needs the build context, so use a method that uploads the whole folder
 1. Put this folder on your Docker host (e.g. `git push` to a repo, or copy it over).
 2. Portainer → **Stacks** → **Add stack**.
 3. Choose **Repository** (point at your git repo) **or** **Upload** (upload this
-   folder as a tarball/zip). The plain *Web editor* cannot build from local files.
+   folder). The plain *Web editor* cannot build from local files.
 4. Set the stack name (e.g. `zimfire`).
-5. Under **Environment variables**, either upload your `.env` or paste the same
-   key/value pairs the stack expects.
+5. Under **Environment variables**, click **Add an environment variable** and enter
+   at least the three required keys:
+   `EUMETSAT_CONSUMER_KEY`, `EUMETSAT_CONSUMER_SECRET`, `FIRMS_MAP_KEY`
+   (add `POLL_INTERVAL_SECONDS`, `RUN_ONCE`, etc. only if you want to override the
+   defaults). Do **not** rely on uploading a `.env` file — Portainer doesn't place
+   it where compose looks, which is the cause of the
+   `env file .../.env not found` error.
 6. **Deploy the stack.**
 
 Portainer builds `zimfire-monitor:latest` and starts the `fire-monitor` service.
