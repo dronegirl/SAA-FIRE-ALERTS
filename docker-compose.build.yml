@@ -1,6 +1,12 @@
-# Host-CLI convenience: build the image AND run it in one command.
-#     docker compose -f docker-compose.build.yml up -d --build
-# (Reads a local .env automatically for the variables.)
+# =========================================================
+# ZimFire Monitor — build + run compose
+#
+# Works two ways, no .env file on disk required:
+#   * Portainer (Repository method): builds from the repo on the host.
+#     Set the variables in the stack's "Environment variables" panel.
+#   * Host CLI: docker compose -f docker-compose.build.yml up -d --build
+#     (a local .env, if present, is auto-loaded for interpolation)
+# =========================================================
 services:
   fire-monitor:
     build: .
@@ -8,16 +14,34 @@ services:
     container_name: zimfire-monitor
     restart: unless-stopped
     init: true
-    env_file:
-      - .env
+
+    environment:
+      # ---- required ----
+      EUMETSAT_CONSUMER_KEY: ${EUMETSAT_CONSUMER_KEY}
+      EUMETSAT_CONSUMER_SECRET: ${EUMETSAT_CONSUMER_SECRET}
+      FIRMS_MAP_KEY: ${FIRMS_MAP_KEY}
+      # ---- optional / tunable (defaults applied if unset) ----
+      EUM_COLLECTION: ${EUM_COLLECTION:-EO:EUM:DAT:0682}
+      MIN_CONFIDENCE: ${MIN_CONFIDENCE:-0.5}
+      LOOKBACK_HOURS: ${LOOKBACK_HOURS:-2}
+      POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-900}
+      RUN_ONCE: ${RUN_ONCE:-false}
+      # ---- Telerivet (unused by this build; safe to leave blank) ----
+      TELERIVET_API_KEY: ${TELERIVET_API_KEY:-}
+      TELERIVET_PROJECT_ID: ${TELERIVET_PROJECT_ID:-}
+      TELERIVET_GROUP_ID: ${TELERIVET_GROUP_ID:-}
+      ALERT_TO: ${ALERT_TO:-}
+
     volumes:
       - fire_output:/app/output
       - fire_db:/app/src/db
+
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "5"
+
 volumes:
   fire_output:
   fire_db:
